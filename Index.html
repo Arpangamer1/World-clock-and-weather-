@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock & Weather</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .location-input {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 300px;
+            max-width: 100%;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin-left: 10px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .clock-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .clock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .city-name {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .timezone {
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .time-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .date-display {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .weather-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            margin-top: 40px;
+        }
+
+        .weather-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .weather-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .weather-city {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .weather-icon {
+            font-size: 3em;
+            margin: 15px 0;
+        }
+
+        .weather-temp {
+            font-size: 2.5em;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .weather-description {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            text-transform: capitalize;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9em;
+        }
+
+        .weather-detail {
+            flex: 1;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .clocks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .location-input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .time-display {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 World Clock & Weather</h1>
+
+        <div class="controls">
+            <input type="text" class="location-input" id="locationInput" placeholder="Enter a city name..." />
+            <button class="btn" onclick="addWeatherLocation()">Add Location</button>
+        </div>
+
+        <div class="clocks-grid" id="clocksGrid">
+            <!-- Clock cards will be generated here -->
+        </div>
+
+        <div class="weather-section">
+            <div class="weather-title">📍 Weather Information</div>
+            <div class="weather-grid" id="weatherGrid">
+                <!-- Weather cards will be generated here -->
+            </div>
+            <div id="loadingMessage" class="loading"></div>
+        </div>
+    </div>
+
+    <script>
+        // Default cities with their timezones
+        const defaultCities = [
+            { name: 'New York', timezone: 'America/New_York' },
+            { name: 'London', timezone: 'Europe/London' },
+            { name: 'Tokyo', timezone: 'Asia/Tokyo' },
+            { name: 'Sydney', timezone: 'Australia/Sydney' },
+            { name: 'Dubai', timezone: 'Asia/Dubai' },
+            { name: 'Singapore', timezone: 'Asia/Singapore' }
+        ];
+
+        let weatherLocations = ['New York', 'London', 'Tokyo'];
+
+        // Format time for a given timezone
+        function formatTime(timezone) {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            return formatter.format(new Date());
+        }
+
+        // Format date for a given timezone
+        function formatDate(timezone) {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            return formatter.format(new Date());
+        }
+
+        // Update all clocks
+        function updateClocks() {
+            const clocksGrid = document.getElementById('clocksGrid');
+            clocksGrid.innerHTML = '';
+
+            defaultCities.forEach(city => {
+                const time = formatTime(city.timezone);
+                const date = formatDate(city.timezone);
+
+                const card = document.createElement('div');
+                card.className = 'clock-card';
+                card.innerHTML = `
+                    <div class="city-name">${city.name}</div>
+                    <div class="timezone">${city.timezone}</div>
+                    <div class="time-display">${time}</div>
+                    <div class="date-display">${date}</div>
+                `;
+                clocksGrid.appendChild(card);
+            });
+        }
+
+        // Get weather for a location
+        async function getWeather(city) {
+            try {
+                const response = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto`,
+                    { mode: 'no-cors' }
+                );
+
+                // Using Open-Meteo API with geocoding
+                const geoResponse = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+                );
+                const geoData = await geoResponse.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    return null;
+                }
+
+                const location = geoData.results[0];
+                const weatherResponse = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto`
+                );
+                const weatherData = await weatherResponse.json();
+
+                return {
+                    city: location.name,
+                    country: location.country,
+                    temperature: Math.round(weatherData.current.temperature_2m),
+                    windSpeed: weatherData.current.wind_speed_10m,
+                    humidity: weatherData.current.relative_humidity_2m,
+                    weatherCode: weatherData.current.weather_code,
+                    description: getWeatherDescription(weatherData.current.weather_code)
+                };
+            } catch (error) {
+                console.error('Error fetching weather:', error);
+                return null;
+            }
+        }
+
+        // Convert WMO weather codes to descriptions
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Clear sky',
+                1: 'Mainly clear',
+                2: 'Partly cloudy',
+                3: 'Overcast',
+                45: 'Foggy',
+                48: 'Foggy',
+                51: 'Light drizzle',
+                53: 'Moderate drizzle',
+                55: 'Heavy drizzle',
+                61: 'Slight rain',
+                63: 'Moderate rain',
+                65: 'Heavy rain',
+                71: 'Slight snow',
+                73: 'Moderate snow',
+                75: 'Heavy snow',
+                77: 'Snow grains',
+                80: 'Slight rain showers',
+                81: 'Moderate rain showers',
+                82: 'Violent rain showers',
+                85: 'Slight snow showers',
+                86: 'Heavy snow showers',
+                95: 'Thunderstorm',
+                96: 'Thunderstorm with hail',
+                99: 'Thunderstorm with hail'
+            };
+            return descriptions[code] || 'Unknown';
+        }
+
+        // Get weather icon emoji based on code
+        function getWeatherIcon(code) {
+            if (code === 0) return '☀️';
+            if (code === 1 || code === 2) return '⛅';
+            if (code === 3) return '☁️';
+            if (code === 45 || code === 48) return '🌫️';
+            if (code >= 51 && code <= 55) return '🌧️';
+            if (code >= 61 && code <= 65) return '🌧️';
+            if (code >= 71 && code <= 77) return '❄️';
+            if (code >= 80 && code <= 82) return '🌦️';
+            if (code >= 85 && code <= 86) return '🌨️';
+            if (code >= 95 && code <= 99) return '⛈️';
+            return '🌡️';
+        }
+
+        // Update weather display
+        async function updateWeather() {
+            const weatherGrid = document.getElementById('weatherGrid');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            loadingMessage.textContent = 'Loading weather...';
+            weatherGrid.innerHTML = '';
+
+            for (const city of weatherLocations) {
+                const weather = await getWeather(city);
+
+                if (weather) {
+                    const card = document.createElement('div');
+                    card.className = 'weather-card';
+                    card.innerHTML = `
+                        <div class="weather-city">${weather.city}, ${weather.country}</div>
+                        <div class="weather-icon">${getWeatherIcon(weather.weatherCode)}</div>
+                        <div class="weather-temp">${weather.temperature}°C</div>
+                        <div class="weather-description">${weather.description}</div>
+                        <div class="weather-details">
+                            <div class="weather-detail">
+                                <strong>Wind</strong><br>${weather.windSpeed} km/h
+                            </div>
+                            <div class="weather-detail">
+                                <strong>Humidity</strong><br>${weather.humidity}%
+                            </div>
+                        </div>
+                    `;
+                    weatherGrid.appendChild(card);
+                } else {
+                    const errorCard = document.createElement('div');
+                    errorCard.className = 'error';
+                    errorCard.textContent = `Could not find weather for ${city}`;
+                    weatherGrid.appendChild(errorCard);
+                }
+            }
+
+            loadingMessage.textContent = '';
+        }
+
+        // Add new weather location
+        function addWeatherLocation() {
+            const input = document.getElementById('locationInput');
+            const city = input.value.trim();
+
+            if (city && !weatherLocations.includes(city)) {
+                weatherLocations.push(city);
+                input.value = '';
+                updateWeather();
+            } else if (weatherLocations.includes(city)) {
+                alert('This location is already added!');
+            } else {
+                alert('Please enter a city name!');
+            }
+        }
+
+        // Allow Enter key to add location
+        document.getElementById('locationInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addWeatherLocation();
+            }
+        });
+
+        // Initialize
+        updateClocks();
+        updateWeather();
+
+        // Update clocks every second
+        setInterval(updateClocks, 1000);
+
+        // Update weather every 10 minutes
+        setInterval(updateWeather, 600000);
+    </script>
+</body>
+</html>
